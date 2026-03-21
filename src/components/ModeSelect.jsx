@@ -1,9 +1,16 @@
+import { useState } from "react";
 import { MODE_PRESETS, isModeUnlocked, loadPlayerRecords } from "../engine/modes.js";
+import HelpOverlay from "./HelpOverlay.jsx";
 
 const MODES = ["normal", "hard", "helpless"];
 
 export default function ModeSelect({ onSelect }) {
   const records = loadPlayerRecords();
+  const [showHelp, setShowHelp] = useState(false);
+
+  if (showHelp) {
+    return <HelpOverlay onClose={() => setShowHelp(false)} />;
+  }
 
   return (
     <div style={{
@@ -88,13 +95,23 @@ export default function ModeSelect({ onSelect }) {
         })}
       </div>
 
+      <button
+        onClick={() => setShowHelp(true)}
+        style={{
+          background: "none", border: "1px solid #14142a", borderRadius: 6,
+          color: "#334", padding: "8px 24px", cursor: "pointer",
+          fontFamily: "inherit", fontSize: 10, letterSpacing: 2,
+          marginTop: 4,
+        }}
+      >
+        HOW TO PLAY
+      </button>
+
       <div style={{
-        fontSize: 9, color: "#1a1a2e", marginTop: 12, textAlign: "center",
+        fontSize: 9, color: "#1a1a2e", marginTop: 4, textAlign: "center",
         lineHeight: 1.7, letterSpacing: 1,
       }}>
-        WASD / arrows to move &middot; space for sonar
-        <br />
-        reach the exit &middot; avoid the darkness
+        press ? anytime for help
       </div>
     </div>
   );

@@ -341,20 +341,34 @@ export function updateClosingCorridors(state, timestamp) {
     state.closingQueue.push({ key, x: state.player.x, y: state.player.y, time: timestamp });
   }
 
-  // Close tiles after delay
+  // Close tiles after delay — max 1 per frame to avoid sudden traps
   const delay = state.modeConfig.closingDelay;
   for (let i = state.closingQueue.length - 1; i >= 0; i--) {
     const q = state.closingQueue[i];
     if (timestamp - q.time < delay) continue;
-    // Don't close tile player is standing on, near exit, or near safe rooms
-    if (q.x === state.player.x && q.y === state.player.y) continue;
+
+    // Never close tile player is on or adjacent to player
+    const distToPlayer = Math.abs(q.x - state.player.x) + Math.abs(q.y - state.player.y);
+    if (distToPlayer <= 1) continue;
+
+    // Never close near exit or safe rooms
     if (Math.hypot(q.x - state.exit.x, q.y - state.exit.y) < 3) continue;
     if (isInSafeRoom(q.x, q.y, state.safeRooms)) continue;
 
-    // Only close if it won't block all paths
+    // Simulate closing: check if player can still reach exit after this wall is placed
     state.maze[q.y][q.x] = 1;
+    const pathExists = bfsPath(state.maze, state.player.x, state.player.y, state.exit.x, state.exit.y);
+    if (!pathExists) {
+      // Would trap player — revert and discard from queue
+      state.maze[q.y][q.x] = 0;
+      state.closingQueue.splice(i, 1);
+      continue;
+    }
+
+    // Safe to close
     state.closedTiles.add(q.key);
     state.closingQueue.splice(i, 1);
+    break; // max 1 closure per frame
   }
 }
 

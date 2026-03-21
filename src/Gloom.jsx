@@ -12,6 +12,7 @@ import { getNarrativeLine } from "./engine/narrative.js";
 import GameOverlay from "./components/GameOverlay.jsx";
 import ModeSelect from "./components/ModeSelect.jsx";
 import NarrativeOverlay from "./components/NarrativeOverlay.jsx";
+import HelpOverlay from "./components/HelpOverlay.jsx";
 
 const MOVE_KEYS = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d"];
 const KEY_TO_DIR = {
@@ -39,6 +40,7 @@ export default function Gloom() {
 
   const [ui, setUi] = useState({ status: "menu", level: 1 });
   const [narrative, setNarrative] = useState(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Compute tile size to fill available space
   const updateCanvasSize = useCallback(() => {
@@ -137,6 +139,7 @@ export default function Gloom() {
         handleOverlayAction();
       }
       if (e.key === "Escape") handleBackToMenu();
+      if (e.key === "?") setShowHelp((v) => !v);
     }
     function onKeyUp(e) {
       keysRef.current.delete(e.key);
@@ -270,6 +273,11 @@ export default function Gloom() {
   }, [handleWin]);
 
   // --- RENDER ---
+
+  // Help overlay (can appear on top of any screen)
+  if (showHelp) {
+    return <HelpOverlay onClose={() => setShowHelp(false)} />;
+  }
 
   // Menu screen
   if (ui.status === "menu") {
