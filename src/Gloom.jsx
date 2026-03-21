@@ -4,7 +4,7 @@ import {
   createGameState, updateEnemies, updateSonar,
   updateShout, updateLight, updateClosingCorridors,
   hasReachedExit, isPlayerCaught, movePlayer,
-  startShoutCharge, releaseShout, triggerSonarSweep,
+  startShoutCharge, releaseShout,
 } from "./engine/gameState.js";
 import { savePlayerRecord } from "./engine/modes.js";
 import { renderFrame } from "./engine/renderer.js";
@@ -13,7 +13,6 @@ import GameOverlay from "./components/GameOverlay.jsx";
 import ModeSelect from "./components/ModeSelect.jsx";
 import NarrativeOverlay from "./components/NarrativeOverlay.jsx";
 import HelpOverlay from "./components/HelpOverlay.jsx";
-import TouchControls from "./components/TouchControls.jsx";
 
 const MOVE_KEYS = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d"];
 const KEY_TO_DIR = {
@@ -42,10 +41,10 @@ export default function Gloom() {
   const [ui, setUi] = useState({ status: "menu", level: 1 });
   const [narrative, setNarrative] = useState(null);
   const [showHelp, setShowHelp] = useState(false);
-  const [isTouchDevice] = useState(() =>
+  const isTouchDevice =
     typeof window !== "undefined" &&
-    ("ontouchstart" in window || navigator.maxTouchPoints > 0)
-  );
+    ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+  const sonarChargingRef = useRef(false);
 
   const updateCanvasSize = useCallback(() => {
     const state = stateRef.current;
@@ -53,9 +52,9 @@ export default function Gloom() {
     if (!state || !canvas) return;
 
     const hasTouchInput = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    const pad = 32;
-    const headerH = 36;
-    const footerH = hasTouchInput ? 160 : 50;
+    const pad = hasTouchInput ? 0 : 32;
+    const headerH = hasTouchInput ? 0 : 36;
+    const footerH = hasTouchInput ? 0 : 50;
     const maxW = window.innerWidth - pad;
     const maxH = window.innerHeight - headerH - footerH - pad;
     const T = computeTileSize(state.cols, state.rows, maxW, maxH);
@@ -111,18 +110,6 @@ export default function Gloom() {
     movedRef.current = true;
   }, []);
 
-  const handleSonarStart = useCallback(() => {
-    if (stateRef.current && statusRef.current === "playing") {
-      startShoutCharge(stateRef.current, performance.now());
-    }
-  }, []);
-
-  const handleSonarRelease = useCallback(() => {
-    if (stateRef.current && statusRef.current === "playing") {
-      releaseShout(stateRef.current, performance.now());
-    }
-  }, []);
-
   const handleBackToMenu = useCallback(() => {
     statusRef.current = "menu";
     stateRef.current = null;
@@ -174,51 +161,59 @@ export default function Gloom() {
     };
   }, [handleOverlayAction, handleBackToMenu]);
 
-  // Swipe gestures — attached to window, ignores button taps
+  // Touch: swipe to move, hold to charge sonar
   useEffect(() => {
-    function isFromControls(e) {
-      const el = e.target;
-      return el.tagName === "BUTTON" || el.closest("[data-touch-controls]");
-    }
-
     function onTouchStart(e) {
-      if (e.touches.length !== 1 || isFromControls(e)) return;
+      if (e.touches.length !== 1) return;
       const t = e.touches[0];
-      touchStartRef.current = { x: t.clientX, y: t.clientY, time: Date.now() };
-    }
+      touchStartRef.current = { x: t.clientX, y: t.clientY, time: Date.now(), swiped: false };
 
-    function onTouchEnd(e) {
-      if (!touchStartRef.current || isFromControls(e)) return;
-      const t = e.changedTouches[0];
-      const dx = t.clientX - touchStartRef.current.x;
-      const dy = t.clientY - touchStartRef.current.y;
-      const elapsed = Date.now() - touchStartRef.current.time;
-      touchStartRef.current = null;
-
-      if (elapsed > 600) return;
-      if (statusRef.current !== "playing" || !stateRef.current) return;
-
-      const absDx = Math.abs(dx);
-      const absDy = Math.abs(dy);
-
-      if (absDx < SWIPE_THRESHOLD && absDy < SWIPE_THRESHOLD) {
-        // Tap on canvas = trigger sonar directly
-        triggerSonarSweep(stateRef.current, performance.now());
-        return;
-      }
-
-      if (absDx > absDy) {
-        handleMove(dx > 0 ? 1 : -1, 0);
-      } else {
-        handleMove(0, dy > 0 ? 1 : -1);
+      if (stateRef.current && statusRef.current === "playing") {
+        startShoutCharge(stateRef.current, performance.now());
+        sonarChargingRef.current = true;
       }
     }
 
     function onTouchMove(e) {
-      // Only prevent default on the game container / canvas area
-      if (!isFromControls(e) && statusRef.current === "playing") {
-        e.preventDefault();
+      if (statusRef.current === "playing") e.preventDefault();
+      if (!touchStartRef.current || touchStartRef.current.swiped) return;
+
+      const t = e.touches[0];
+      const dx = t.clientX - touchStartRef.current.x;
+      const dy = t.clientY - touchStartRef.current.y;
+
+      if (Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(dy) > SWIPE_THRESHOLD) {
+        touchStartRef.current.swiped = true;
+        if (sonarChargingRef.current && stateRef.current) {
+          stateRef.current.shoutChargeStart = null;
+          sonarChargingRef.current = false;
+        }
       }
+    }
+
+    function onTouchEnd(e) {
+      if (!touchStartRef.current) return;
+      const info = touchStartRef.current;
+      touchStartRef.current = null;
+
+      if (statusRef.current !== "playing" || !stateRef.current) {
+        sonarChargingRef.current = false;
+        return;
+      }
+
+      if (info.swiped) {
+        const t = e.changedTouches[0];
+        const dx = t.clientX - info.x;
+        const dy = t.clientY - info.y;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          handleMove(dx > 0 ? 1 : -1, 0);
+        } else {
+          handleMove(0, dy > 0 ? 1 : -1);
+        }
+      } else if (sonarChargingRef.current) {
+        releaseShout(stateRef.current, performance.now());
+      }
+      sonarChargingRef.current = false;
     }
 
     window.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -310,24 +305,27 @@ export default function Gloom() {
       display: "flex", flexDirection: "column", alignItems: "center",
       justifyContent: "center", height: "100dvh", background: "#06060a",
       color: "#ccc", fontFamily: "'SF Mono',Monaco,Consolas,monospace",
-      padding: "8px 16px", boxSizing: "border-box", overflow: "hidden",
-      gap: 6, touchAction: "none",
+      padding: isTouchDevice ? 0 : "8px 16px", boxSizing: "border-box",
+      overflow: "hidden", gap: isTouchDevice ? 0 : 6, touchAction: "none",
+      userSelect: "none", WebkitUserSelect: "none",
     }}>
-      <div style={{
-        display: "flex", alignItems: "center", gap: 12, flexShrink: 0, height: 28,
-      }}>
-        <span style={{ fontSize: 12, letterSpacing: 5, color: "#a0a0d0", textTransform: "uppercase", fontWeight: 600 }}>
-          Gloom
-        </span>
-        <span style={{ fontSize: 11, color: "#b0b0d0", letterSpacing: 2 }}>
-          lvl {ui.level}
-        </span>
-        {modeRef.current && modeRef.current.id !== "normal" && (
-          <span style={{ fontSize: 10, color: "#cc9966", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>
-            {modeRef.current.name}
+      {!isTouchDevice && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12, flexShrink: 0, height: 28,
+        }}>
+          <span style={{ fontSize: 12, letterSpacing: 5, color: "#a0a0d0", textTransform: "uppercase", fontWeight: 600 }}>
+            Gloom
           </span>
-        )}
-      </div>
+          <span style={{ fontSize: 11, color: "#b0b0d0", letterSpacing: 2 }}>
+            lvl {ui.level}
+          </span>
+          {modeRef.current && modeRef.current.id !== "normal" && (
+            <span style={{ fontSize: 10, color: "#cc9966", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>
+              {modeRef.current.name}
+            </span>
+          )}
+        </div>
+      )}
 
       <div style={{ position: "relative", lineHeight: 0, flexShrink: 1, flexGrow: 1, display: "flex", alignItems: "center" }}>
         <canvas
@@ -335,8 +333,8 @@ export default function Gloom() {
           width={100}
           height={100}
           style={{
-            border: "1px solid #2a2a50",
-            borderRadius: 6,
+            border: isTouchDevice ? "none" : "1px solid #2a2a50",
+            borderRadius: isTouchDevice ? 0 : 6,
             display: "block",
             imageRendering: "pixelated",
             touchAction: "none",
@@ -347,13 +345,7 @@ export default function Gloom() {
         )}
       </div>
 
-      {isTouchDevice ? (
-        <TouchControls
-          onMove={handleMove}
-          onSonarStart={handleSonarStart}
-          onSonarRelease={handleSonarRelease}
-        />
-      ) : (
+      {!isTouchDevice && (
         <div style={{
           fontSize: 10, color: "#8888b0", textAlign: "center",
           lineHeight: 1.6, flexShrink: 0, height: 28,
