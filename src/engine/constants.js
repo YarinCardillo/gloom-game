@@ -1,4 +1,3 @@
-export const TILE = 20;
 export const BASE_COLS = 31;
 export const BASE_ROWS = 21;
 export const VIS_RADIUS = 3.5;
@@ -24,17 +23,25 @@ export const SAFE_ROOM_RADIUS = 1.5;
 
 /**
  * Calculate maze dimensions for a given level.
- * Scales from 31x21 at level 1 to 51x35 by level 10+.
  */
 export function getMazeDimensions(level) {
   const scale = Math.min(1, (level - 1) / 9);
   const cols = BASE_COLS + Math.floor(scale * 20);
   const rows = BASE_ROWS + Math.floor(scale * 14);
-  // Ensure odd dimensions for maze generation
   return {
     cols: cols % 2 === 0 ? cols + 1 : cols,
     rows: rows % 2 === 0 ? rows + 1 : rows,
   };
+}
+
+/**
+ * Compute tile size to fill available space.
+ * Returns pixel size per tile.
+ */
+export function computeTileSize(cols, rows, maxWidth, maxHeight) {
+  const tileW = Math.floor(maxWidth / cols);
+  const tileH = Math.floor(maxHeight / rows);
+  return Math.max(8, Math.min(tileW, tileH));
 }
 
 /**
