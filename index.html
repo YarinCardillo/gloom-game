@@ -2,11 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#06060a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="Gloom — a sonar survival roguelike. Navigate dark mazes using only sonar pings. Browser-native, instant play." />
     <title>Gloom</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { background: #06060a; overflow: hidden; }
+      html, body { background: #06060a; overflow: hidden; height: 100%; }
+      body { position: fixed; width: 100%; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     </style>
   </head>
   <body>
