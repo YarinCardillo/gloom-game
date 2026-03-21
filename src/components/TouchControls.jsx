@@ -1,10 +1,10 @@
 const BTN_STYLE = {
-  background: "rgba(255,255,255,0.10)",
-  border: "1px solid rgba(255,255,255,0.25)",
-  color: "#b0b8d0",
-  width: 56,
-  height: 56,
-  fontSize: 20,
+  background: "rgba(255,255,255,0.12)",
+  border: "1px solid rgba(255,255,255,0.30)",
+  color: "#c0c8e0",
+  width: 58,
+  height: 58,
+  fontSize: 22,
   borderRadius: 10,
   cursor: "pointer",
   fontFamily: "monospace",
@@ -17,12 +17,13 @@ const BTN_STYLE = {
 };
 
 const SONAR_STYLE = {
-  background: "rgba(80,120,200,0.14)",
-  border: "1px solid rgba(100,150,255,0.35)",
-  color: "#90b0e0",
-  width: 68,
-  height: 68,
-  fontSize: 10,
+  background: "rgba(80,120,200,0.18)",
+  border: "1px solid rgba(100,150,255,0.45)",
+  color: "#a0c0ff",
+  width: 72,
+  height: 72,
+  fontSize: 11,
+  fontWeight: 600,
   letterSpacing: 1,
   borderRadius: "50%",
   cursor: "pointer",
@@ -41,10 +42,13 @@ const SONAR_STYLE = {
  */
 export default function TouchControls({ onMove, onSonarStart, onSonarRelease }) {
   return (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "center",
-      gap: 28, padding: "4px 0 8px", flexShrink: 0,
-    }}>
+    <div
+      data-touch-controls="true"
+      style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        gap: 28, padding: "4px 0 8px", flexShrink: 0,
+      }}
+    >
       <div style={{
         display: "flex", flexDirection: "column",
         alignItems: "center", gap: 4,

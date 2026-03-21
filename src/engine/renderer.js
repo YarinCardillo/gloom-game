@@ -238,25 +238,25 @@ function renderHUD(ctx, state, W) {
   const { modeConfig, light, sonar, levelType } = state;
 
   if (modeConfig.lightEnabled) {
-    const barW = 60, barH = 4, barX = 8, barY = 8;
-    ctx.fillStyle = "rgba(255,255,255,0.18)";
+    const barW = 70, barH = 5, barX = 8, barY = 8;
+    ctx.fillStyle = "rgba(255,255,255,0.25)";
     ctx.fillRect(barX, barY, barW, barH);
-    ctx.fillStyle = light > 0.3 ? "rgba(80,120,255,0.7)" : "rgba(255,80,80,0.8)";
+    ctx.fillStyle = light > 0.3 ? "rgba(80,130,255,0.85)" : "rgba(255,80,80,0.9)";
     ctx.fillRect(barX, barY, barW * light, barH);
   }
 
   if (!modeConfig.autoSonar && sonar.chargesLeft !== Infinity) {
-    ctx.fillStyle = "rgba(255,255,255,0.45)";
-    ctx.font = "10px monospace";
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.font = "bold 11px monospace";
     ctx.textAlign = "left";
-    ctx.fillText(`sonar: ${sonar.chargesLeft}`, 8, 24);
+    ctx.fillText(`sonar: ${sonar.chargesLeft}`, 8, 26);
   }
 
   if (levelType !== "standard") {
-    ctx.fillStyle = levelType === "gauntlet" ? "rgba(255,60,60,0.5)" : "rgba(255,200,60,0.5)";
-    ctx.font = "bold 10px monospace";
+    ctx.fillStyle = levelType === "gauntlet" ? "rgba(255,60,60,0.7)" : "rgba(255,200,60,0.7)";
+    ctx.font = "bold 11px monospace";
     ctx.textAlign = "right";
-    ctx.fillText(levelType.toUpperCase(), W - 8, 14);
+    ctx.fillText(levelType.toUpperCase(), W - 8, 16);
     ctx.textAlign = "left";
   }
 }

@@ -22,7 +22,7 @@ const KEY_TO_DIR = {
   ArrowLeft: [-1, 0], a: [-1, 0],
   ArrowRight: [1, 0], d: [1, 0],
 };
-const SWIPE_THRESHOLD = 15;
+const SWIPE_THRESHOLD = 20;
 
 export default function Gloom() {
   const canvasRef = useRef(null);
@@ -47,7 +47,6 @@ export default function Gloom() {
     ("ontouchstart" in window || navigator.maxTouchPoints > 0)
   );
 
-  // Compute tile size to fill available space
   const updateCanvasSize = useCallback(() => {
     const state = stateRef.current;
     const canvas = canvasRef.current;
@@ -56,7 +55,7 @@ export default function Gloom() {
     const hasTouchInput = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     const pad = 32;
     const headerH = 36;
-    const footerH = hasTouchInput ? 140 : 50;
+    const footerH = hasTouchInput ? 160 : 50;
     const maxW = window.innerWidth - pad;
     const maxH = window.innerHeight - headerH - footerH - pad;
     const T = computeTileSize(state.cols, state.rows, maxW, maxH);
@@ -76,7 +75,6 @@ export default function Gloom() {
     movedRef.current = false;
     setUi({ status: "playing", level });
     setNarrative(null);
-    // Resize on next frame after state is set
     requestAnimationFrame(() => updateCanvasSize());
   }, [updateCanvasSize]);
 
@@ -176,35 +174,36 @@ export default function Gloom() {
     };
   }, [handleOverlayAction, handleBackToMenu]);
 
-  // Swipe gestures on entire game container
+  // Swipe gestures — attached to window, ignores button taps
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    function isFromControls(e) {
+      const el = e.target;
+      return el.tagName === "BUTTON" || el.closest("[data-touch-controls]");
+    }
 
     function onTouchStart(e) {
-      if (e.touches.length !== 1) return;
+      if (e.touches.length !== 1 || isFromControls(e)) return;
       const t = e.touches[0];
       touchStartRef.current = { x: t.clientX, y: t.clientY, time: Date.now() };
     }
+
     function onTouchEnd(e) {
-      if (!touchStartRef.current) return;
+      if (!touchStartRef.current || isFromControls(e)) return;
       const t = e.changedTouches[0];
       const dx = t.clientX - touchStartRef.current.x;
       const dy = t.clientY - touchStartRef.current.y;
       const elapsed = Date.now() - touchStartRef.current.time;
       touchStartRef.current = null;
 
-      if (elapsed > 500) return;
+      if (elapsed > 600) return;
       if (statusRef.current !== "playing" || !stateRef.current) return;
 
       const absDx = Math.abs(dx);
       const absDy = Math.abs(dy);
 
       if (absDx < SWIPE_THRESHOLD && absDy < SWIPE_THRESHOLD) {
-        // Tap — trigger sonar (must charge then release)
-        startShoutCharge(stateRef.current, performance.now());
+        // Tap on canvas = trigger sonar directly
         triggerSonarSweep(stateRef.current, performance.now());
-        stateRef.current.shout.charging = false;
         return;
       }
 
@@ -214,21 +213,25 @@ export default function Gloom() {
         handleMove(0, dy > 0 ? 1 : -1);
       }
     }
+
     function onTouchMove(e) {
-      e.preventDefault();
+      // Only prevent default on the game container / canvas area
+      if (!isFromControls(e) && statusRef.current === "playing") {
+        e.preventDefault();
+      }
     }
 
-    container.addEventListener("touchstart", onTouchStart, { passive: true });
-    container.addEventListener("touchend", onTouchEnd, { passive: true });
-    container.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
     return () => {
-      container.removeEventListener("touchstart", onTouchStart);
-      container.removeEventListener("touchend", onTouchEnd);
-      container.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchmove", onTouchMove);
     };
-  }, [handleMove, ui.status]);
+  }, [handleMove]);
 
-  // Game loop — always running, checks status internally
+  // Game loop
   useEffect(() => {
     let running = true;
 
@@ -257,14 +260,12 @@ export default function Gloom() {
         }
       }
 
-      // Update systems
       updateEnemies(state, timestamp);
       updateSonar(state, timestamp);
       updateShout(state, timestamp);
       updateLight(state, movedRef.current);
       updateClosingCorridors(state, timestamp);
 
-      // Check win/lose
       if (hasReachedExit(state)) {
         handleWin();
       } else if (isPlayerCaught(state)) {
@@ -272,7 +273,6 @@ export default function Gloom() {
         setUi((prev) => ({ ...prev, status: "lost" }));
       }
 
-      // Resize canvas if dimensions changed
       const expectedW = state.cols * T;
       const expectedH = state.rows * T;
       if (canvas.width !== expectedW || canvas.height !== expectedH) {
@@ -293,17 +293,14 @@ export default function Gloom() {
 
   // --- RENDER ---
 
-  // Help overlay (can appear on top of any screen)
   if (showHelp) {
     return <HelpOverlay onClose={() => setShowHelp(false)} />;
   }
 
-  // Menu screen
   if (ui.status === "menu") {
     return <ModeSelect onSelect={handleModeSelect} />;
   }
 
-  // Narrative between levels
   if (narrative && statusRef.current === "narrative") {
     return <NarrativeOverlay line={narrative.line} onDone={handleNarrativeDone} />;
   }
@@ -312,21 +309,21 @@ export default function Gloom() {
     <div ref={containerRef} style={{
       display: "flex", flexDirection: "column", alignItems: "center",
       justifyContent: "center", height: "100dvh", background: "#06060a",
-      color: "#999", fontFamily: "'SF Mono',Monaco,Consolas,monospace",
+      color: "#ccc", fontFamily: "'SF Mono',Monaco,Consolas,monospace",
       padding: "8px 16px", boxSizing: "border-box", overflow: "hidden",
-      gap: 6,
+      gap: 6, touchAction: "none",
     }}>
       <div style={{
         display: "flex", alignItems: "center", gap: 12, flexShrink: 0, height: 28,
       }}>
-        <span style={{ fontSize: 11, letterSpacing: 5, color: "#8888b0", textTransform: "uppercase" }}>
+        <span style={{ fontSize: 12, letterSpacing: 5, color: "#a0a0d0", textTransform: "uppercase", fontWeight: 600 }}>
           Gloom
         </span>
-        <span style={{ fontSize: 10, color: "#a0a0c0", letterSpacing: 2 }}>
+        <span style={{ fontSize: 11, color: "#b0b0d0", letterSpacing: 2 }}>
           lvl {ui.level}
         </span>
         {modeRef.current && modeRef.current.id !== "normal" && (
-          <span style={{ fontSize: 9, color: "#aa7755", letterSpacing: 1, textTransform: "uppercase" }}>
+          <span style={{ fontSize: 10, color: "#cc9966", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>
             {modeRef.current.name}
           </span>
         )}
@@ -338,7 +335,7 @@ export default function Gloom() {
           width={100}
           height={100}
           style={{
-            border: "1px solid #14142a",
+            border: "1px solid #2a2a50",
             borderRadius: 6,
             display: "block",
             imageRendering: "pixelated",
@@ -358,7 +355,7 @@ export default function Gloom() {
         />
       ) : (
         <div style={{
-          fontSize: 9, color: "#606078", textAlign: "center",
+          fontSize: 10, color: "#8888b0", textAlign: "center",
           lineHeight: 1.6, flexShrink: 0, height: 28,
         }}>
           WASD to move &middot; space for sonar &middot; ? for help &middot; esc for menu
