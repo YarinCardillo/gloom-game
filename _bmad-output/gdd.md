@@ -653,20 +653,70 @@ Native wrapper via Capacitor or PWA manifest for app store distribution. Touch c
 
 ### Technical Metrics
 
-{{technical_metrics}}
+| Metric | Target | Measurement |
+|-|-|-|
+| Frame rate | 60fps sustained on mid-range mobile (2020 phone) | Chrome DevTools Performance panel, `requestAnimationFrame` delta tracking |
+| Load time | <2 seconds URL-to-gameplay on 3G | Lighthouse performance audit, WebPageTest |
+| Bundle size | <500KB total (gzipped) | Vite build output, bundlephobia for dependencies |
+| Memory usage | <50MB heap during gameplay | Chrome DevTools Memory panel |
+| Pathfinding budget | <2ms per frame for all enemy BFS combined | Performance.now() instrumentation around pathfinding loop |
 
 ### Gameplay Metrics
 
-{{gameplay_metrics}}
+| Metric | Target | Rationale |
+|-|-|-|
+| Average session length | >5 minutes | Indicates engagement beyond a single failed run — players are retrying |
+| Retry rate after death | >30% | Measures "one more run" compulsion — the core retention driver |
+| Leaderboard participation | >10% of players who reach level 5 | Validates that the competitive meta-game resonates |
+| Mode unlock rate | >20% of Normal players reach level 10 | Confirms the difficulty curve is challenging but not discouraging |
+| Hard mode adoption | >15% of players who unlock Hard attempt it | Validates that mode gating creates aspiration, not frustration |
 
 ---
 
 ## Out of Scope
 
-{{out_of_scope}}
+The following features are explicitly excluded from the current development scope. Some are planned for future releases; others are design decisions to keep the game focused.
+
+| Feature | Status | Notes |
+|-|-|-|
+| Multiplayer (co-op shared blindness) | Postponed | Two players navigating the same maze with independent visibility. Compelling but requires networking infrastructure. |
+| Multiplayer (asymmetric 1v4) | Postponed | One player controls the maze/enemies while four players try to escape. Significant design and technical effort. |
+| Audio / sound design | Postponed | Ambient drone, sonar SFX, heartbeat proximity, safe room chimes. Deferred to a dedicated post-MVP audio epic. |
+| Native mobile app | Future | iOS/Android via Capacitor or native wrapper. Web version must stabilize first. |
+| Steam release | Future | Not excluded but requires additional polish, potential features, and distribution setup. |
+| Character / skin system | Future | Cosmetic-only player avatar variants. No gameplay impact. |
+| Item / upgrade system | Future | Temporary pickups (sonar boost, light refill). Must not undermine skill-first design. |
+| Key-before-escape mode | Postponed | Collect a key before the exit unlocks. Adds exploration pressure. Separate mode, designed later. |
+| Persistent meta-progression | Not planned | No permanent unlocks or stat boosts between runs. Skill-only progression is a core design value. |
+| Voice acting / narration | Not planned | Inter-level narrative is text only. Silence is part of the atmosphere. |
 
 ---
 
 ## Assumptions and Dependencies
 
-{{assumptions_and_dependencies}}
+**Technical Assumptions:**
+- Canvas 2D API is available and performant across all target browsers. No WebGL fallback needed.
+- `requestAnimationFrame` provides reliable 60fps frame timing on target devices.
+- `localStorage` is available for client-side state persistence (checkpoints, settings, personal bests).
+- BFS pathfinding for up to 10 enemies on a 51x35 grid completes within frame budget on mid-range hardware.
+- System font stack renders legibly across platforms without custom web fonts.
+
+**Infrastructure Assumptions:**
+- No backend required for MVP. The game runs entirely client-side. Leaderboard functionality (Epic 7) is the first feature requiring server infrastructure.
+- Static site hosting is sufficient for deployment (no server-side rendering, no API routes for MVP).
+- Seed-based deterministic generation eliminates the need for server-stored level data.
+
+**Team Assumptions:**
+- Single developer (Yarin) with AI-assisted development (Claude Code).
+- No dedicated artist, sound designer, or QA team. All assets are procedural. Testing is manual + automated.
+- Development velocity depends on one person's availability — epic timelines are flexible.
+
+**Dependencies:**
+- **React 19:** UI framework for menus, HUD, and screen management. Game rendering is direct canvas, not React-rendered.
+- **Vite 8:** Build tooling, dev server, bundling. No runtime dependency.
+- **No other external dependencies for MVP.** No physics engine, no game framework, no asset pipeline. The game is vanilla canvas 2D with React for UI chrome.
+
+**Risks:**
+- BFS pathfinding may need optimization (spatial caching, reduced tick rate) if profiling reveals frame budget issues at maximum enemy count.
+- Mobile touch controls may require significant iteration to feel responsive — prototyped but not validated at scale.
+- Leaderboard anti-cheat is non-trivial for a client-side game. Seed verification (replaying inputs server-side) is the planned approach but adds backend complexity.
