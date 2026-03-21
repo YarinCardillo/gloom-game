@@ -25,7 +25,7 @@ export default function NarrativeOverlay({ line, onDone }) {
       background: "#06060a", zIndex: 10,
     }}>
       <div style={{
-        fontSize: 13, color: "#445",
+        fontSize: 13, color: "#8888a0",
         fontStyle: "italic", letterSpacing: 1,
         fontFamily: "'SF Mono',Monaco,Consolas,monospace",
         textAlign: "center", padding: 32,

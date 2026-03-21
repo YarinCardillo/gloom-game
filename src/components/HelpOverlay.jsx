@@ -13,12 +13,12 @@ export default function HelpOverlay({ onClose }) {
         style={{
           maxWidth: 380, width: "90%", padding: "28px 24px",
           fontFamily: "'SF Mono',Monaco,Consolas,monospace",
-          color: "#778", fontSize: 11, lineHeight: 1.8,
+          color: "#99aabb", fontSize: 11, lineHeight: 1.8,
         }}
       >
         <div style={{
           fontSize: 14, fontWeight: 700, letterSpacing: 4,
-          color: "#3a3a50", textTransform: "uppercase", marginBottom: 20,
+          color: "#7070a0", textTransform: "uppercase", marginBottom: 20,
         }}>
           How to Play
         </div>
@@ -60,7 +60,7 @@ export default function HelpOverlay({ onClose }) {
           onClick={onClose}
           style={{
             display: "block", margin: "24px auto 0", background: "none",
-            border: "1px solid #1a1a30", color: "#445",
+            border: "1px solid #2a2a50", color: "#7778a0",
             padding: "8px 32px", borderRadius: 4, cursor: "pointer",
             fontFamily: "inherit", fontSize: 11, letterSpacing: 2,
           }}
@@ -75,7 +75,7 @@ export default function HelpOverlay({ onClose }) {
 function Section({ title, children }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 10, color: "#4a4a60", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>
+      <div style={{ fontSize: 10, color: "#7070a0", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>
         {title}
       </div>
       {children}
@@ -86,14 +86,14 @@ function Section({ title, children }) {
 function Row({ k, v }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "2px 0" }}>
-      <span style={{ color: "#556" }}>{k}</span>
-      <span style={{ color: "#445", textAlign: "right" }}>{v}</span>
+      <span style={{ color: "#8890a0" }}>{k}</span>
+      <span style={{ color: "#7080a0", textAlign: "right" }}>{v}</span>
     </div>
   );
 }
 
 function Li({ children }) {
-  return <div style={{ paddingLeft: 8, position: "relative" }}><span style={{ position: "absolute", left: 0, color: "#333" }}>&middot;</span>{children}</div>;
+  return <div style={{ paddingLeft: 8, position: "relative" }}><span style={{ position: "absolute", left: 0, color: "#667" }}>&middot;</span>{children}</div>;
 }
 
 function C({ c, children }) {

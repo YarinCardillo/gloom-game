@@ -17,14 +17,14 @@ export default function GameOverlay({ status, level, onAction }) {
       }}>
         {isWon ? "ESCAPED" : "CAUGHT"}
       </div>
-      <div style={{ fontSize: 11, color: "#445", marginBottom: 4 }}>
+      <div style={{ fontSize: 11, color: "#8888a0", marginBottom: 4 }}>
         {isWon ? `level ${level} cleared` : "the darkness got you"}
       </div>
       <button
         onClick={onAction}
         style={{
           background: "none",
-          border: `1px solid ${isWon ? "#00ff8844" : "#ff404044"}`,
+          border: `1px solid ${isWon ? "#00ff8866" : "#ff404066"}`,
           color: isWon ? "#00ff88" : "#ff6060",
           padding: "8px 28px", cursor: "pointer", borderRadius: 4,
           fontFamily: "inherit", fontSize: 12, letterSpacing: 2,

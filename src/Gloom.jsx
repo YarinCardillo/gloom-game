@@ -13,6 +13,7 @@ import GameOverlay from "./components/GameOverlay.jsx";
 import ModeSelect from "./components/ModeSelect.jsx";
 import NarrativeOverlay from "./components/NarrativeOverlay.jsx";
 import HelpOverlay from "./components/HelpOverlay.jsx";
+import TouchControls from "./components/TouchControls.jsx";
 
 const MOVE_KEYS = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d"];
 const KEY_TO_DIR = {
@@ -41,6 +42,10 @@ export default function Gloom() {
   const [ui, setUi] = useState({ status: "menu", level: 1 });
   const [narrative, setNarrative] = useState(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [isTouchDevice] = useState(() =>
+    typeof window !== "undefined" &&
+    ("ontouchstart" in window || navigator.maxTouchPoints > 0)
+  );
 
   // Compute tile size to fill available space
   const updateCanvasSize = useCallback(() => {
@@ -48,9 +53,10 @@ export default function Gloom() {
     const canvas = canvasRef.current;
     if (!state || !canvas) return;
 
+    const hasTouchInput = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     const pad = 32;
     const headerH = 36;
-    const footerH = 50;
+    const footerH = hasTouchInput ? 140 : 50;
     const maxW = window.innerWidth - pad;
     const maxH = window.innerHeight - headerH - footerH - pad;
     const T = computeTileSize(state.cols, state.rows, maxW, maxH);
@@ -105,6 +111,18 @@ export default function Gloom() {
     if (statusRef.current !== "playing" || !stateRef.current) return;
     movePlayer(stateRef.current, dx, dy);
     movedRef.current = true;
+  }, []);
+
+  const handleSonarStart = useCallback(() => {
+    if (stateRef.current && statusRef.current === "playing") {
+      startShoutCharge(stateRef.current, performance.now());
+    }
+  }, []);
+
+  const handleSonarRelease = useCallback(() => {
+    if (stateRef.current && statusRef.current === "playing") {
+      releaseShout(stateRef.current, performance.now());
+    }
   }, []);
 
   const handleBackToMenu = useCallback(() => {
@@ -207,7 +225,7 @@ export default function Gloom() {
       canvas.removeEventListener("touchend", onTouchEnd);
       canvas.removeEventListener("touchmove", onTouchMove);
     };
-  }, [handleMove]);
+  }, [handleMove, ui.status]);
 
   // Game loop — always running, checks status internally
   useEffect(() => {
@@ -300,14 +318,14 @@ export default function Gloom() {
       <div style={{
         display: "flex", alignItems: "center", gap: 12, flexShrink: 0, height: 28,
       }}>
-        <span style={{ fontSize: 11, letterSpacing: 5, color: "#3a3a50", textTransform: "uppercase" }}>
+        <span style={{ fontSize: 11, letterSpacing: 5, color: "#6a6a90", textTransform: "uppercase" }}>
           Gloom
         </span>
-        <span style={{ fontSize: 10, color: "#555", letterSpacing: 2 }}>
+        <span style={{ fontSize: 10, color: "#8888a0", letterSpacing: 2 }}>
           lvl {ui.level}
         </span>
         {modeRef.current && modeRef.current.id !== "normal" && (
-          <span style={{ fontSize: 9, color: "#553322", letterSpacing: 1, textTransform: "uppercase" }}>
+          <span style={{ fontSize: 9, color: "#aa7755", letterSpacing: 1, textTransform: "uppercase" }}>
             {modeRef.current.name}
           </span>
         )}
@@ -331,12 +349,20 @@ export default function Gloom() {
         )}
       </div>
 
-      <div style={{
-        fontSize: 9, color: "#1e1e30", textAlign: "center",
-        lineHeight: 1.6, flexShrink: 0, height: 28,
-      }}>
-        swipe or WASD to move &middot; tap or space for sonar &middot; esc for menu
-      </div>
+      {isTouchDevice ? (
+        <TouchControls
+          onMove={handleMove}
+          onSonarStart={handleSonarStart}
+          onSonarRelease={handleSonarRelease}
+        />
+      ) : (
+        <div style={{
+          fontSize: 9, color: "#606078", textAlign: "center",
+          lineHeight: 1.6, flexShrink: 0, height: 28,
+        }}>
+          WASD to move &middot; space for sonar &middot; ? for help &middot; esc for menu
+        </div>
+      )}
     </div>
   );
 }

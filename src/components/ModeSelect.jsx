@@ -21,12 +21,12 @@ export default function ModeSelect({ onSelect }) {
     }}>
       <div style={{
         fontSize: 28, fontWeight: 700, letterSpacing: 8,
-        color: "#3a3a50", textTransform: "uppercase", marginBottom: 8,
+        color: "#7070a0", textTransform: "uppercase", marginBottom: 8,
       }}>
         Gloom
       </div>
       <div style={{
-        fontSize: 11, color: "#2a2a3e", letterSpacing: 2, marginBottom: 16,
+        fontSize: 11, color: "#606088", letterSpacing: 2, marginBottom: 16,
       }}>
         sonar survival roguelike
       </div>
@@ -47,7 +47,7 @@ export default function ModeSelect({ onSelect }) {
               disabled={!unlocked}
               style={{
                 background: unlocked ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.01)",
-                border: `1px solid ${unlocked ? "#1a1a30" : "#0f0f1a"}`,
+                border: `1px solid ${unlocked ? "#2a2a50" : "#181830"}`,
                 borderRadius: 8,
                 padding: "14px 18px",
                 cursor: unlocked ? "pointer" : "default",
@@ -57,10 +57,10 @@ export default function ModeSelect({ onSelect }) {
                 transition: "border-color 0.2s",
               }}
               onMouseEnter={(e) => {
-                if (unlocked) e.currentTarget.style.borderColor = "#2a2a50";
+                if (unlocked) e.currentTarget.style.borderColor = "#3a3a60";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = unlocked ? "#1a1a30" : "#0f0f1a";
+                e.currentTarget.style.borderColor = unlocked ? "#2a2a50" : "#181830";
               }}
             >
               <div style={{
@@ -68,24 +68,24 @@ export default function ModeSelect({ onSelect }) {
               }}>
                 <span style={{
                   fontSize: 14, fontWeight: 600, letterSpacing: 3,
-                  color: unlocked ? getModeColor(modeId) : "#333",
+                  color: unlocked ? getModeColor(modeId) : "#555568",
                   textTransform: "uppercase",
                 }}>
                   {mode.name}
                 </span>
                 {best > 0 && (
-                  <span style={{ fontSize: 10, color: "#445" }}>
+                  <span style={{ fontSize: 10, color: "#7788a0" }}>
                     best: lvl {best}
                   </span>
                 )}
                 {!unlocked && (
-                  <span style={{ fontSize: 9, color: "#333" }}>
+                  <span style={{ fontSize: 9, color: "#555568" }}>
                     locked
                   </span>
                 )}
               </div>
               <div style={{
-                fontSize: 10, color: unlocked ? "#445" : "#222",
+                fontSize: 10, color: unlocked ? "#7788a0" : "#444458",
                 marginTop: 6, lineHeight: 1.5,
               }}>
                 {unlocked ? mode.description : getUnlockHint(mode)}
@@ -98,8 +98,8 @@ export default function ModeSelect({ onSelect }) {
       <button
         onClick={() => setShowHelp(true)}
         style={{
-          background: "none", border: "1px solid #14142a", borderRadius: 6,
-          color: "#334", padding: "8px 24px", cursor: "pointer",
+          background: "none", border: "1px solid #2a2a50", borderRadius: 6,
+          color: "#7778a0", padding: "8px 24px", cursor: "pointer",
           fontFamily: "inherit", fontSize: 10, letterSpacing: 2,
           marginTop: 4,
         }}
@@ -108,7 +108,7 @@ export default function ModeSelect({ onSelect }) {
       </button>
 
       <div style={{
-        fontSize: 9, color: "#1a1a2e", marginTop: 4, textAlign: "center",
+        fontSize: 9, color: "#505068", marginTop: 4, textAlign: "center",
         lineHeight: 1.7, letterSpacing: 1,
       }}>
         press ? anytime for help
@@ -119,10 +119,10 @@ export default function ModeSelect({ onSelect }) {
 
 function getModeColor(modeId) {
   switch (modeId) {
-    case "normal": return "#667";
-    case "hard": return "#884433";
-    case "helpless": return "#883333";
-    default: return "#667";
+    case "normal": return "#99a0b8";
+    case "hard": return "#cc8866";
+    case "helpless": return "#cc6666";
+    default: return "#99a0b8";
   }
 }
 
