@@ -11,7 +11,7 @@ export function renderFrame(ctx, state, timestamp, T) {
   const H = state.rows * T;
   const visR = getEffectiveVisRadius(state);
 
-  ctx.fillStyle = "#07070c";
+  ctx.fillStyle = "#0a0a14";
   ctx.fillRect(0, 0, W, H);
 
   renderVisibleTiles(ctx, state, visR, T);
@@ -47,16 +47,16 @@ function renderVisibleTiles(ctx, state, visR, T) {
       const isClosed = state.closedTiles.has(`${x},${y}`);
 
       if (isClosed) {
-        ctx.fillStyle = `rgba(30,15,15,${alpha * 0.6})`;
+        ctx.fillStyle = `rgba(45,20,20,${alpha * 0.7})`;
       } else if (isWall) {
-        ctx.fillStyle = `rgba(22,22,42,${alpha})`;
+        ctx.fillStyle = `rgba(35,35,60,${alpha})`;
       } else {
-        ctx.fillStyle = `rgba(38,38,65,${alpha * 0.85})`;
+        ctx.fillStyle = `rgba(50,50,80,${alpha * 0.9})`;
       }
       ctx.fillRect(x * T, y * T, T, T);
 
       if (!isWall && !isClosed && alpha > 0.15) {
-        ctx.strokeStyle = `rgba(55,55,90,${alpha * 0.25})`;
+        ctx.strokeStyle = `rgba(70,70,110,${alpha * 0.4})`;
         ctx.lineWidth = 0.5;
         ctx.strokeRect(x * T, y * T, T, T);
       }
@@ -70,7 +70,7 @@ function renderBreadcrumbs(ctx, state, visR, T) {
     const [vx, vy] = key.split(",").map(Number);
     const dist = Math.hypot(vx - state.player.x, vy - state.player.y);
     if (dist > visR + 0.5 || dist < 0.5) continue;
-    const alpha = Math.max(0, 1 - dist / (visR + 1)) * 0.12;
+    const alpha = Math.max(0, 1 - dist / (visR + 1)) * 0.25;
     ctx.fillStyle = `rgba(80,120,255,${alpha})`;
     const pad = Math.max(1, T * 0.3);
     ctx.fillRect(vx * T + pad, vy * T + pad, T - pad * 2, T - pad * 2);
@@ -219,7 +219,7 @@ function renderPlayer(ctx, state, T, W, H) {
 
   ctx.save();
   ctx.shadowColor = "#5588ff";
-  ctx.shadowBlur = Math.max(8, T * 0.7);
+  ctx.shadowBlur = Math.max(12, T * 1.0);
   ctx.fillStyle = "#fff";
   ctx.beginPath();
   ctx.arc(px, py, T * 0.3, 0, Math.PI * 2);
@@ -228,7 +228,7 @@ function renderPlayer(ctx, state, T, W, H) {
 
   const lightR = T * 1.8 * (state.modeConfig.lightEnabled ? (0.5 + 0.5 * state.light) : 1);
   const glow = ctx.createRadialGradient(px, py, 0, px, py, lightR);
-  glow.addColorStop(0, "rgba(80,120,255,0.06)");
+  glow.addColorStop(0, "rgba(80,120,255,0.12)");
   glow.addColorStop(1, "rgba(80,120,255,0)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
@@ -239,22 +239,22 @@ function renderHUD(ctx, state, W) {
 
   if (modeConfig.lightEnabled) {
     const barW = 60, barH = 4, barX = 8, barY = 8;
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
+    ctx.fillStyle = "rgba(255,255,255,0.18)";
     ctx.fillRect(barX, barY, barW, barH);
-    ctx.fillStyle = light > 0.3 ? "rgba(80,120,255,0.5)" : "rgba(255,80,80,0.6)";
+    ctx.fillStyle = light > 0.3 ? "rgba(80,120,255,0.7)" : "rgba(255,80,80,0.8)";
     ctx.fillRect(barX, barY, barW * light, barH);
   }
 
   if (!modeConfig.autoSonar && sonar.chargesLeft !== Infinity) {
-    ctx.fillStyle = "rgba(255,255,255,0.15)";
-    ctx.font = "9px monospace";
+    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    ctx.font = "10px monospace";
     ctx.textAlign = "left";
     ctx.fillText(`sonar: ${sonar.chargesLeft}`, 8, 24);
   }
 
   if (levelType !== "standard") {
-    ctx.fillStyle = levelType === "gauntlet" ? "rgba(255,60,60,0.3)" : "rgba(255,200,60,0.3)";
-    ctx.font = "bold 9px monospace";
+    ctx.fillStyle = levelType === "gauntlet" ? "rgba(255,60,60,0.5)" : "rgba(255,200,60,0.5)";
+    ctx.font = "bold 10px monospace";
     ctx.textAlign = "right";
     ctx.fillText(levelType.toUpperCase(), W - 8, 14);
     ctx.textAlign = "left";

@@ -4,7 +4,7 @@ import {
   createGameState, updateEnemies, updateSonar,
   updateShout, updateLight, updateClosingCorridors,
   hasReachedExit, isPlayerCaught, movePlayer,
-  startShoutCharge, releaseShout,
+  startShoutCharge, releaseShout, triggerSonarSweep,
 } from "./engine/gameState.js";
 import { savePlayerRecord } from "./engine/modes.js";
 import { renderFrame } from "./engine/renderer.js";
@@ -22,7 +22,7 @@ const KEY_TO_DIR = {
   ArrowLeft: [-1, 0], a: [-1, 0],
   ArrowRight: [1, 0], d: [1, 0],
 };
-const SWIPE_THRESHOLD = 20;
+const SWIPE_THRESHOLD = 15;
 
 export default function Gloom() {
   const canvasRef = useRef(null);
@@ -176,10 +176,10 @@ export default function Gloom() {
     };
   }, [handleOverlayAction, handleBackToMenu]);
 
-  // Swipe gestures on canvas
+  // Swipe gestures on entire game container
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!container) return;
 
     function onTouchStart(e) {
       if (e.touches.length !== 1) return;
@@ -194,16 +194,17 @@ export default function Gloom() {
       const elapsed = Date.now() - touchStartRef.current.time;
       touchStartRef.current = null;
 
-      if (elapsed > 500) return; // too slow for a swipe
+      if (elapsed > 500) return;
+      if (statusRef.current !== "playing" || !stateRef.current) return;
 
       const absDx = Math.abs(dx);
       const absDy = Math.abs(dy);
 
       if (absDx < SWIPE_THRESHOLD && absDy < SWIPE_THRESHOLD) {
-        // Tap — trigger sonar
-        if (stateRef.current && statusRef.current === "playing") {
-          releaseShout(stateRef.current, performance.now());
-        }
+        // Tap — trigger sonar (must charge then release)
+        startShoutCharge(stateRef.current, performance.now());
+        triggerSonarSweep(stateRef.current, performance.now());
+        stateRef.current.shout.charging = false;
         return;
       }
 
@@ -214,16 +215,16 @@ export default function Gloom() {
       }
     }
     function onTouchMove(e) {
-      e.preventDefault(); // prevent scroll
+      e.preventDefault();
     }
 
-    canvas.addEventListener("touchstart", onTouchStart, { passive: true });
-    canvas.addEventListener("touchend", onTouchEnd, { passive: true });
-    canvas.addEventListener("touchmove", onTouchMove, { passive: false });
+    container.addEventListener("touchstart", onTouchStart, { passive: true });
+    container.addEventListener("touchend", onTouchEnd, { passive: true });
+    container.addEventListener("touchmove", onTouchMove, { passive: false });
     return () => {
-      canvas.removeEventListener("touchstart", onTouchStart);
-      canvas.removeEventListener("touchend", onTouchEnd);
-      canvas.removeEventListener("touchmove", onTouchMove);
+      container.removeEventListener("touchstart", onTouchStart);
+      container.removeEventListener("touchend", onTouchEnd);
+      container.removeEventListener("touchmove", onTouchMove);
     };
   }, [handleMove, ui.status]);
 
@@ -318,10 +319,10 @@ export default function Gloom() {
       <div style={{
         display: "flex", alignItems: "center", gap: 12, flexShrink: 0, height: 28,
       }}>
-        <span style={{ fontSize: 11, letterSpacing: 5, color: "#6a6a90", textTransform: "uppercase" }}>
+        <span style={{ fontSize: 11, letterSpacing: 5, color: "#8888b0", textTransform: "uppercase" }}>
           Gloom
         </span>
-        <span style={{ fontSize: 10, color: "#8888a0", letterSpacing: 2 }}>
+        <span style={{ fontSize: 10, color: "#a0a0c0", letterSpacing: 2 }}>
           lvl {ui.level}
         </span>
         {modeRef.current && modeRef.current.id !== "normal" && (
