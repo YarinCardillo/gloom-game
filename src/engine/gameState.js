@@ -5,7 +5,9 @@ import {
   SONAR_SWEEP_DURATION, SONAR_COOLDOWN,
   SHOUT_REVEAL_RADIUS, SHOUT_DURATION, SHOUT_CHARGE_MS,
   SHOUT_ENEMY_SPEED_BOOST, SHOUT_BOOST_DURATION,
-  SAFE_ROOM_RADIUS,
+  SAFE_ROOM_RADIUS, SAFE_ROOM_MIN_SPACING, SAFE_ROOM_RECHARGE_RATE,
+  PATROL_ROUTE_LENGTH, LURKER_ACTIVATION_DIST,
+  SHOUT_LIGHT_DRAIN, SHOUT_MIN_LIGHT,
   getMazeDimensions, getLevelType,
 } from "./constants.js";
 import { generateMaze, findRandomEmpty } from "./maze.js";
@@ -34,7 +36,7 @@ function generatePatrolRoute(maze, startX, startY) {
   const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
   let x = startX, y = startY;
 
-  for (let step = 0; step < 8; step++) {
+  for (let step = 0; step < PATROL_ROUTE_LENGTH; step++) {
     const shuffled = dirs.filter(([dx, dy]) => maze[y + dy]?.[x + dx] === 0);
     if (shuffled.length === 0) break;
     const [dx, dy] = shuffled[Math.floor(Math.random() * shuffled.length)];
@@ -139,16 +141,18 @@ function spawnEnemies(maze, level, exitX, exitY, levelType) {
 
 function placeSafeRooms(maze, level, levelType, exitX, exitY) {
   const count = levelType === "milestone" ? 2 : (level % 3 === 0 ? 1 : 0);
-  if (count === 0 && level <= 2) return [{ x: -1, y: -1 }].slice(0, 0); // none for early easy levels
+  const guaranteed = level <= 3 ? 1 : 0;
+  const total = Math.max(count, guaranteed);
+  if (total === 0) return [];
 
   const rooms = [];
   const avoid = [[1, 1], [exitX, exitY]];
 
-  for (let i = 0; i < Math.max(count, level <= 3 ? 1 : 0); i++) {
+  for (let i = 0; i < total; i++) {
     const [rx, ry] = findRandomEmpty(
       maze,
       [...avoid, ...rooms.map((r) => [r.x, r.y])],
-      5
+      SAFE_ROOM_MIN_SPACING
     );
     rooms.push({ x: rx, y: ry });
     avoid.push([rx, ry]);
@@ -166,50 +170,51 @@ export function updateEnemies(state, timestamp) {
   if (timestamp - state.lastEnemyMove < speed) return;
 
   for (const enemy of state.enemies) {
-    // Don't move into safe rooms
-    let targetX = state.player.x;
-    let targetY = state.player.y;
-
-    if (enemy.type === "patrol" && !isPlayerNear(enemy, state.player, 5)) {
-      // Patrol follows route when player is far
-      const route = enemy.route;
-      enemy.routeIndex += enemy.routeDir;
-      if (enemy.routeIndex >= route.length - 1 || enemy.routeIndex <= 0) {
-        enemy.routeDir *= -1;
-      }
-      const [nx, ny] = route[Math.min(enemy.routeIndex, route.length - 1)];
-      if (!isInSafeRoom(nx, ny, state.safeRooms)) {
-        enemy.x = nx;
-        enemy.y = ny;
-      }
-      continue;
-    }
-
-    if (enemy.type === "stalker" && state.visited.size > 0) {
-      // Stalker follows player's trail
-      const trail = findNearestVisited(state.visited, enemy.x, enemy.y, state.player);
-      if (trail) {
-        targetX = trail[0];
-        targetY = trail[1];
-      }
-    }
-
-    if (enemy.type === "lurker") {
-      // Lurker only moves when player is close
-      const dist = Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y);
-      if (dist > 4) continue;
-    }
-
-    const path = bfsPath(state.maze, enemy.x, enemy.y, targetX, targetY);
-    if (path && path.length > 0) {
-      const [nx, ny] = path[0];
-      if (!isInSafeRoom(nx, ny, state.safeRooms)) {
-        enemy.x = nx;
-        enemy.y = ny;
-      }
-    }
+    moveEnemy(enemy, state);
   }
   state.lastEnemyMove = timestamp;
+}
+
+function moveEnemy(enemy, state) {
+  if (enemy.type === "patrol" && !isPlayerNear(enemy, state.player, 5)) {
+    movePatrolEnemy(enemy, state.safeRooms);
+    return;
+  }
+
+  if (enemy.type === "lurker") {
+    const dist = Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y);
+    if (dist > LURKER_ACTIVATION_DIST) return;
+  }
+
+  const target = resolveEnemyTarget(enemy, state);
+  const path = bfsPath(state.maze, enemy.x, enemy.y, target.x, target.y);
+  if (path && path.length > 0) {
+    const [nx, ny] = path[0];
+    if (!isInSafeRoom(nx, ny, state.safeRooms)) {
+      enemy.x = nx;
+      enemy.y = ny;
+    }
+  }
+}
+
+function movePatrolEnemy(enemy, safeRooms) {
+  enemy.routeIndex += enemy.routeDir;
+  if (enemy.routeIndex >= enemy.route.length - 1 || enemy.routeIndex <= 0) {
+    enemy.routeDir *= -1;
+  }
+  const [nx, ny] = enemy.route[Math.min(enemy.routeIndex, enemy.route.length - 1)];
+  if (!isInSafeRoom(nx, ny, safeRooms)) {
+    enemy.x = nx;
+    enemy.y = ny;
+  }
+}
+
+function resolveEnemyTarget(enemy, state) {
+  if (enemy.type === "stalker" && state.visited.size > 0) {
+    const trail = findNearestVisited(state.visited, enemy.x, enemy.y, state.player);
+    if (trail) return { x: trail[0], y: trail[1] };
+  }
+  return state.player;
 }
 
 function isPlayerNear(enemy, player, dist) {
@@ -301,7 +306,7 @@ export function releaseShout(state, timestamp) {
     state.shout.active = true;
     state.shout.revealStart = timestamp;
     state.shout.boostUntil = timestamp + SHOUT_BOOST_DURATION;
-    state.light = Math.max(0.1, state.light - 0.15);
+    state.light = Math.max(SHOUT_MIN_LIGHT, state.light - SHOUT_LIGHT_DRAIN);
   } else {
     // Quick tap = normal sonar
     triggerSonarSweep(state, timestamp);
@@ -325,7 +330,7 @@ export function updateLight(state, isMoving) {
 
   // Safe room recharge
   if (isInSafeRoom(state.player.x, state.player.y, state.safeRooms)) {
-    state.light = Math.min(1.0, state.light + 0.008);
+    state.light = Math.min(1.0, state.light + SAFE_ROOM_RECHARGE_RATE);
   }
 }
 

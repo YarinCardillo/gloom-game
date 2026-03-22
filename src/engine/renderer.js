@@ -24,7 +24,7 @@ export function renderFrame(ctx, state, timestamp, T) {
   renderVisibleEnemies(ctx, state, visR, T);
   renderDangerVignette(ctx, state, W, H);
   renderPlayer(ctx, state, T, W, H);
-  renderHUD(ctx, state, W, T);
+  renderHUD(ctx, state, W);
 }
 
 function renderVisibleTiles(ctx, state, visR, T) {

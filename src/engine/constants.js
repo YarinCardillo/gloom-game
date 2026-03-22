@@ -20,6 +20,12 @@ export const SHOUT_DURATION = 600;
 export const SHOUT_ENEMY_SPEED_BOOST = 1.5;
 export const SHOUT_BOOST_DURATION = 3000;
 export const SAFE_ROOM_RADIUS = 1.5;
+export const SAFE_ROOM_MIN_SPACING = 5;
+export const SAFE_ROOM_RECHARGE_RATE = 0.008;
+export const PATROL_ROUTE_LENGTH = 8;
+export const LURKER_ACTIVATION_DIST = 4;
+export const SHOUT_LIGHT_DRAIN = 0.15;
+export const SHOUT_MIN_LIGHT = 0.1;
 
 /**
  * Calculate maze dimensions for a given level.

@@ -50,10 +50,9 @@ export default function Gloom() {
     const canvas = canvasRef.current;
     if (!state || !canvas) return;
 
-    const hasTouchInput = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    const pad = hasTouchInput ? 0 : 32;
-    const headerH = hasTouchInput ? 0 : 36;
-    const footerH = hasTouchInput ? 0 : 50;
+    const pad = isTouchDevice ? 0 : 32;
+    const headerH = isTouchDevice ? 0 : 36;
+    const footerH = isTouchDevice ? 0 : 50;
     const maxW = window.innerWidth - pad;
     const maxH = window.innerHeight - headerH - footerH - pad;
     const T = computeTileSize(state.cols, state.rows, maxW, maxH);

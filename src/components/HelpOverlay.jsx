@@ -58,10 +58,9 @@ export default function HelpOverlay({ onClose }) {
           </Section>
 
           <Section title="Controls &mdash; Mobile">
-            <Row k="D-pad buttons" v="Move" />
-            <Row k="Sonar button (tap)" v="Sonar sweep" />
-            <Row k="Sonar button (hold)" v="Shout" />
-            <Row k="Swipe on maze" v="Move (alternative)" />
+            <Row k="Swipe" v="Move" />
+            <Row k="Tap (quick)" v="Sonar sweep" />
+            <Row k="Hold" v="Shout &mdash; see more, attract enemies" />
           </Section>
 
           <Section title="Mechanics">
