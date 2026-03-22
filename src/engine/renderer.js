@@ -47,7 +47,7 @@ function renderVisibleTiles(ctx, state, visR, T) {
       const isClosed = state.closedTiles.has(`${x},${y}`);
 
       if (isClosed) {
-        ctx.fillStyle = `rgba(50,15,15,${alpha * 0.7})`;
+        ctx.fillStyle = `rgba(25,10,10,${alpha})`;
       } else if (isWall) {
         ctx.fillStyle = `rgba(18,18,35,${alpha})`;
       } else {
