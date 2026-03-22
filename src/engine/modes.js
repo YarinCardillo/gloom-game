@@ -78,19 +78,6 @@ export const MODE_PRESETS = {
 };
 
 /**
- * Create a custom mode starting from Normal defaults.
- */
-export function createCustomMode(overrides = {}) {
-  return {
-    ...MODE_PRESETS.normal,
-    id: "custom",
-    name: "Custom",
-    description: "Your rules.",
-    ...overrides,
-  };
-}
-
-/**
  * Check if a mode is unlocked based on player records.
  */
 export function isModeUnlocked(modeId, playerRecords) {

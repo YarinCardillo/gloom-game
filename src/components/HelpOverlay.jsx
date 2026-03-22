@@ -82,7 +82,7 @@ export default function HelpOverlay({ onClose }) {
             onClick={onClose}
             style={{
               display: "block", margin: "24px auto 0", background: "rgba(255,255,255,0.06)",
-              border: "1px solid #5555880", color: "#c0c0e0",
+              border: "1px solid #555588", color: "#c0c0e0",
               padding: "14px 48px", borderRadius: 6, cursor: "pointer",
               fontFamily: "inherit", fontSize: 14, fontWeight: 600, letterSpacing: 2,
             }}

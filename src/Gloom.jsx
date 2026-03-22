@@ -25,7 +25,6 @@ const SWIPE_THRESHOLD = 20;
 
 export default function Gloom() {
   const canvasRef = useRef(null);
-  const containerRef = useRef(null);
   const stateRef = useRef(null);
   const statusRef = useRef("menu");
   const levelRef = useRef(1);
@@ -302,13 +301,12 @@ export default function Gloom() {
   }
 
   return (
-    <div ref={containerRef} style={{
+    <div style={{
       display: "flex", flexDirection: "column", alignItems: "center",
       justifyContent: "center", height: "100dvh", background: "#06060a",
       color: "#ccc", fontFamily: "'SF Mono',Monaco,Consolas,monospace",
       padding: isTouchDevice ? 0 : "8px 16px", boxSizing: "border-box",
       overflow: "hidden", gap: isTouchDevice ? 0 : 6, touchAction: "none",
-      userSelect: "none", WebkitUserSelect: "none",
     }}>
       {!isTouchDevice && (
         <div style={{

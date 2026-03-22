@@ -101,9 +101,6 @@ export function createGameState(level, modeConfig) {
     enemySpeed: computeEnemySpeed(level, modeConfig),
     lastEnemyMove: 0,
 
-    // Level transition
-    transitioning: false,
-    transitionStart: 0,
   };
 }
 
