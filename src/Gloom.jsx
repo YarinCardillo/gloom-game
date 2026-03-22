@@ -243,6 +243,7 @@ export default function Gloom() {
 
       const ctx = canvas.getContext("2d");
       const T = tileSizeRef.current;
+      let moved = movedRef.current;
       movedRef.current = false;
 
       // Keyboard movement
@@ -251,14 +252,14 @@ export default function Gloom() {
         if (dir) {
           movePlayer(state, dir[0], dir[1]);
           lastMoveRef.current = timestamp;
-          movedRef.current = true;
+          moved = true;
         }
       }
 
       updateEnemies(state, timestamp);
       updateSonar(state, timestamp);
       updateShout(state, timestamp);
-      updateLight(state, movedRef.current);
+      updateLight(state, moved);
       updateClosingCorridors(state, timestamp);
 
       if (hasReachedExit(state)) {
