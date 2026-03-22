@@ -47,16 +47,16 @@ function renderVisibleTiles(ctx, state, visR, T) {
       const isClosed = state.closedTiles.has(`${x},${y}`);
 
       if (isClosed) {
-        ctx.fillStyle = `rgba(45,20,20,${alpha * 0.7})`;
+        ctx.fillStyle = `rgba(50,15,15,${alpha * 0.7})`;
       } else if (isWall) {
-        ctx.fillStyle = `rgba(35,35,60,${alpha})`;
+        ctx.fillStyle = `rgba(18,18,35,${alpha})`;
       } else {
-        ctx.fillStyle = `rgba(50,50,80,${alpha * 0.9})`;
+        ctx.fillStyle = `rgba(55,55,95,${alpha * 0.95})`;
       }
       ctx.fillRect(x * T, y * T, T, T);
 
-      if (!isWall && !isClosed && alpha > 0.15) {
-        ctx.strokeStyle = `rgba(70,70,110,${alpha * 0.4})`;
+      if (!isWall && !isClosed && alpha > 0.1) {
+        ctx.strokeStyle = `rgba(80,80,130,${alpha * 0.3})`;
         ctx.lineWidth = 0.5;
         ctx.strokeRect(x * T, y * T, T, T);
       }
